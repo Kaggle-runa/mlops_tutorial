@@ -9,10 +9,9 @@ git clone https://github.com/Kaggle-runa/mlops_tutorial.git
 docker-compose up -d もしくは docker compose up -d
 
 3. dbの準備   
-docker exec -it pyspark_mlops /bin/bash
-
-mysql -h db_mysql_mlops -uroot -proot   
-source 2.3.0_utf-8.sql
+docker exec -it pyspark_mlops /bin/bash   
+mysql -h db_mysql_mlops -uroot -proot    
+source 2.3.0_utf-8.sql   
 
 4. pysparkの確認   
 ターミナルでpysparkを実行
