@@ -1,0 +1,66 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:8.1
+    platform: linux/arm64
+    volumes:
+      - ./files/share/my.cnf:/etc/mysql/conf.d/my.cnf
+      - ./data/mysql/data:/var/lib/mysql
+      - ./files/hiveddls:/docker-entrypoint-initdb.d
+    restart: always
+    environment:
+      MYSQL_DATABASE: metastore
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: '%'
+    container_name: db_mysql_mlops
+    networks:
+      - app-net-big
+
+  kafka:
+    build: ./files/kafka
+    command: sh /etc/rc.local/start_up.sh
+    container_name: kafka_mlops
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_mlops:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: localhost:2181
+    networks:
+      - app-net-big
+
+  workspace:
+    build: ./files
+    command: sleep infinity
+    depends_on:
+      - mysql
+      - kafka
+    container_name: pyspark_mlops
+    networks:
+      - app-net-big
+
+  nodejs:
+    build: ./files/nodejs
+    command: node /usr/src/app/express.js
+    container_name: nodejs_mlops
+    ports:
+      - 3001:3001
+    networks:
+      - app-net-big
+
+  mongo:
+    build: ./files/mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ZQpassowrd
+      MONGO_INITDB_DATABASE: user_prediction
+    ports:
+      - 27017:27017
+    networks:
+      - app-net-big
+    container_name: mongo_data_mlops
+
+networks:
+  app-net-big:
+    driver: bridge
